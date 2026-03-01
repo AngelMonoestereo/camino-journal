@@ -44,7 +44,7 @@ export default function DashboardPage() {
 
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 bg-black text-white rounded-lg"
+              className="px-4 py-2 bg-black hover:bg-neutral-800 transition text-white rounded-lg"
             >
               Guardar entrada
             </button>
