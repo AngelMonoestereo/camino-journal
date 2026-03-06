@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import CaminoMap from '@/components/camino/CaminoMap'
 
 type Stats = {
   totalKm: number
@@ -13,17 +14,33 @@ type Stats = {
   totalExpenses: number
 }
 
+type Progress = {
+  stages: {
+    id: string
+    number: number
+    from: string
+    to: string
+  }[]
+  completedStageIds: string[]
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
+  const [progress, setProgress] = useState<Progress | null>(null)
 
   useEffect(() => {
-    async function fetchStats() {
-      const res = await fetch('/api/stats')
-      const data = await res.json()
-      setStats(data)
+    async function fetchData() {
+      const statsRes = await fetch('/api/stats')
+      const statsData = await statsRes.json()
+
+      const progressRes = await fetch('/api/progress')
+      const progressData = await progressRes.json()
+
+      setStats(statsData)
+      setProgress(progressData)
     }
 
-    fetchStats()
+    fetchData()
   }, [])
 
   if (!stats) return <p>Loading Camino stats...</p>
@@ -45,6 +62,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* STATS GRID */}
+
       <div className="grid grid-cols-2 gap-4">
         <StatCard title="KM Walked" value={`${stats.totalKm} km`} />
 
@@ -64,6 +83,15 @@ export default function DashboardPage() {
 
         <StatCard title="Expenses" value={`€${stats.totalExpenses}`} />
       </div>
+
+      {/* CAMINO MAP */}
+
+      {progress && (
+        <CaminoMap
+          stages={progress.stages}
+          completedStageIds={progress.completedStageIds}
+        />
+      )}
     </div>
   )
 }

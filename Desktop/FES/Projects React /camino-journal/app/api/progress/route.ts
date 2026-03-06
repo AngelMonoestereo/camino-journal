@@ -11,24 +11,37 @@ export async function GET() {
 
     if (!entries.length) {
       return NextResponse.json({
-        totalKm: 0,
-        completedStages: 0,
+        stages: [],
+        completedStageIds: [],
       })
     }
 
-    const totalKm = entries.reduce((sum, entry) => {
-      return sum + (entry.stage?.distanceKm || 0)
-    }, 0)
+    const routeId = entries[0].stage.routeId
 
-    const completedStages = entries.length
+    const stages = await prisma.stage.findMany({
+      where: {
+        routeId,
+      },
+      orderBy: {
+        number: 'asc',
+      },
+      select: {
+        id: true,
+        number: true,
+        from: true,
+        to: true,
+      },
+    })
+
+    const completedStageIds = [...new Set(entries.map((e) => e.stageId))]
 
     return NextResponse.json({
-      totalKm,
-      completedStages,
+      stages,
+      completedStageIds,
     })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to calculate progress' },
+      { error: 'Failed to load route progress' },
       { status: 500 }
     )
   }
