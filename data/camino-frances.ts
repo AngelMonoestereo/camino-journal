@@ -1,3 +1,5 @@
+import caminoRoute from '@/data/camino-frances'
+
 const caminoRoute = {
   geometry: {
     coordinates: [

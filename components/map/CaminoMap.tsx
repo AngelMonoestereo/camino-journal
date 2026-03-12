@@ -1,8 +1,17 @@
 'use client'
 
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+  useMap,
+} from 'react-leaflet'
+
 import type { LatLngTuple } from 'leaflet'
 import FlyToStage from './FlyToStage'
+import caminoRoute from '@/data/camino-frances'
 
 type Stage = {
   id: string
@@ -19,20 +28,37 @@ type Props = {
 }
 
 export default function CaminoMap({ stages, completedStageIds }: Props) {
-  const currentStage = stages.find((stage) =>
+  const walkedStages = stages.filter((stage) =>
     completedStageIds.includes(stage.id)
   )
+
+  const remainingStages = stages.filter(
+    (stage) => !completedStageIds.includes(stage.id)
+  )
+
+  const walkedCoords: LatLngTuple[] = walkedStages.map((s) => [s.lat, s.lng])
+
+  const remainingCoords: LatLngTuple[] = remainingStages.map((s) => [
+    s.lat,
+    s.lng,
+  ])
+
+  const currentStage = walkedStages[walkedStages.length - 1]
 
   const currentPosition: LatLngTuple | null = currentStage
     ? [currentStage.lat, currentStage.lng]
     : null
 
+  // convertir GeoJSON [lng, lat] → Leaflet [lat, lng]
+  const caminoCoords: LatLngTuple[] = caminoRoute.geometry.coordinates.map(
+    ([lng, lat]) => [lat, lng]
+  )
+
   return (
     <div className="bg-white rounded-xl shadow p-6">
       <h2 className="text-lg font-semibold mb-4">Camino Route Progress</h2>
 
-      {/* MAP */}
-      <div className="h-[400px] w-full mb-6 rounded-lg overflow-hidden">
+      <div className="h-[420px] w-full mb-6 rounded-lg overflow-hidden">
         <MapContainer
           center={[42.5, -2.5]}
           zoom={6}
@@ -44,48 +70,54 @@ export default function CaminoMap({ stages, completedStageIds }: Props) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
+          {/* Camino completo */}
+          <Polyline
+            positions={caminoCoords}
+            pathOptions={{
+              color: '#facc15',
+              weight: 4,
+            }}
+          />
+
+          {/* progreso caminando */}
+          <Polyline
+            positions={walkedCoords}
+            pathOptions={{
+              color: 'green',
+              weight: 6,
+            }}
+          />
+
+          {/* restante */}
+          <Polyline
+            positions={remainingCoords}
+            pathOptions={{
+              color: '#9ca3af',
+              weight: 3,
+              dashArray: '6',
+            }}
+          />
+
           {currentPosition && (
             <FlyToStage position={currentPosition} zoom={11} />
           )}
 
-          {stages.map((stage) => (
-            <Marker key={stage.id} position={[stage.lat, stage.lng]}>
-              <Popup>
-                Stage {stage.number}: {stage.from} → {stage.to}
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
+          {stages.map((stage) => {
+            const completed = completedStageIds.includes(stage.id)
 
-      {/* STAGE LIST */}
-      <div className="space-y-4">
-        {stages.map((stage) => {
-          const completed = completedStageIds.includes(stage.id)
-
-          return (
-            <div key={stage.id} className="flex items-center gap-4">
-              <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
-                  completed
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
-              >
-                {completed ? '✓' : ''}
-              </div>
-
-              <div className="text-sm">
-                <span className="font-medium">Stage {stage.number}</span>
-
-                <span className="text-gray-600">
-                  {' '}
+            return (
+              <Marker key={stage.id} position={[stage.lat, stage.lng]}>
+                <Popup>
+                  <strong>Stage {stage.number}</strong>
+                  <br />
                   {stage.from} → {stage.to}
-                </span>
-              </div>
-            </div>
-          )
-        })}
+                  <br />
+                  {completed ? 'Completed ✅' : 'Upcoming'}
+                </Popup>
+              </Marker>
+            )
+          })}
+        </MapContainer>
       </div>
     </div>
   )
