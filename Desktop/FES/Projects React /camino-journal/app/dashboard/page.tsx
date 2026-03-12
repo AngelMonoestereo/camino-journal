@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import CaminoMap from '@/components/camino/CaminoMap'
+import CaminoMap from '@/components/camino/CaminoProgress'
 
 type Stats = {
   totalKm: number

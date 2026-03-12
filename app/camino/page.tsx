@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import CaminoMap from '@/components/camino/CaminoMap'
+import CaminoMap from '@/components/camino/CaminoProgress'
 
 export default async function CaminoPage() {
   const stages = await prisma.stage.findMany({
