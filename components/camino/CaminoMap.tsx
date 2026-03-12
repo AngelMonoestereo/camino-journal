@@ -1,7 +1,8 @@
 'use client'
 
-import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet'
 import type { LatLngTuple } from 'leaflet'
+import caminoRoute from '@/data/camino-frances'
 
 type Stage = {
   id: string
@@ -27,22 +28,27 @@ export default function CaminoMap({ stages, completedStageIds }: Props) {
   )
 
   const walkedCoords: LatLngTuple[] = walkedStages.map((s) => [s.lat, s.lng])
+
   const remainingCoords: LatLngTuple[] = remainingStages.map((s) => [
     s.lat,
     s.lng,
   ])
 
-  const center: LatLngTuple = currentStage
-    ? [currentStage.lat, currentStage.lng]
-    : stages.length
-    ? [stages[0].lat, stages[0].lng]
-    : [42.5987, -5.5671]
+  const caminoCoords: LatLngTuple[] = caminoRoute.geometry.coordinates.map(
+    ([lng, lat]: [number, number]) => [lat, lng]
+  )
 
   const currentStageNumber = completedStageIds.length
 
   const currentStage = stages.find(
     (stage) => stage.number === currentStageNumber + 1
   )
+
+  const center: LatLngTuple = currentStage
+    ? [currentStage.lat, currentStage.lng]
+    : stages.length
+    ? [stages[0].lat, stages[0].lng]
+    : [42.5987, -5.5671]
 
   return (
     <div className="bg-white rounded-xl shadow p-6">
@@ -57,18 +63,29 @@ export default function CaminoMap({ stages, completedStageIds }: Props) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
+          {/* CAMINO REAL */}
+
+          <Polyline positions={caminoCoords} color="#FFD700" weight={4} />
+
           {/* walked route */}
+
           <Polyline positions={walkedCoords} color="green" />
 
           {/* remaining route */}
+
           <Polyline positions={remainingCoords} color="gray" />
 
           {/* markers */}
-          {stages.map((stage) => {
-            const isCurrent = currentStage?.id === stage.id
 
-            return <Marker key={stage.id} position={[stage.lat, stage.lng]} />
-          })}
+          {stages.map((stage) => (
+            <Marker key={stage.id} position={[stage.lat, stage.lng]}>
+              <Popup>
+                <strong>Stage {stage.number}</strong>
+                <br />
+                {stage.from} → {stage.to}
+              </Popup>
+            </Marker>
+          ))}
         </MapContainer>
       </div>
 

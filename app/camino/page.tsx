@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import CaminoMap from '@/components/camino/CaminoMap'
 
 export default async function CaminoPage() {
