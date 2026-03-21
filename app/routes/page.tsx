@@ -1,7 +1,26 @@
 import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
+import { currentUser } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 
 export default async function RoutesPage() {
+  const user = await currentUser()
+
+  // ✅ Si hay usuario, verificamos si ya tiene ruta activa
+  if (user) {
+    const activeRoute = await prisma.route.findFirst({
+      where: {
+        userId: user.id,
+        isOfficial: false,
+      },
+    })
+
+    // 🚀 si ya tiene ruta → lo mandamos al journal
+    if (activeRoute) {
+      redirect('/journal')
+    }
+  }
+
+  // 🔎 rutas oficiales (las que muestras)
   const routes = await prisma.route.findMany({
     where: { isOfficial: true },
     include: { stages: true },

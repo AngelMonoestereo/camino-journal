@@ -16,6 +16,15 @@ export async function POST(req: Request) {
       return new Response('Missing routeId', { status: 400 })
     }
 
+    // ✅ Asegurar que el user existe en DB
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {},
+      create: {
+        id: user.id,
+      },
+    })
+
     // 🔎 Verificar si ya tiene una ruta activa
     const existing = await prisma.route.findFirst({
       where: { userId: user.id, isOfficial: false },
@@ -40,7 +49,7 @@ export async function POST(req: Request) {
       data: {
         name: official.name,
         isOfficial: false,
-        userId: user.id,
+        userId: user.id, // ✅ ahora sí válido
       },
     })
 
