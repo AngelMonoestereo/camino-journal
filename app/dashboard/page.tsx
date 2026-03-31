@@ -1,97 +1,125 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import CaminoMap from '@/components/camino/CaminoProgress'
+import { useEffect, useState, useRef } from 'react'
+import CaminoMap, { CaminoMapRef } from '@/components/map/CaminoMap'
+import { useAchievements } from '@/hooks/useAchievements'
+import AchievementsPopup from '@/components/ui/AchievementsPopup'
+import Timeline from '@/components/camino/Timeline'
+import { useCinematicCamino } from '@/hooks/useCinematicCamino'
 
 type Stats = {
   totalKm: number
   completedStages: number
   totalStages: number
-  progress: number
+  percent: number
   avgMood: number
   totalBeers: number
   beersPerKm: number
   totalExpenses: number
 }
 
-type Progress = {
-  stages: {
-    id: string
-    number: number
-    from: string
-    to: string
-  }[]
-  completedStageIds: string[]
+type Stage = {
+  id: string
+  number: number
+  from: string
+  to: string
+  lat: number
+  lng: number
 }
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
-  const [progress, setProgress] = useState<Progress | null>(null)
+  const [progress, setProgress] = useState<any>(null)
 
+  const mapRef = useRef<CaminoMapRef>(null)
+  const playCinematic = useCinematicCamino(mapRef)
+
+  // 🔥 fetch stats
   useEffect(() => {
-    async function fetchData() {
-      const statsRes = await fetch('/api/stats')
-      const statsData = await statsRes.json()
-
-      const progressRes = await fetch('/api/progress')
-      const progressData = await progressRes.json()
-
-      setStats(statsData)
-      setProgress(progressData)
+    async function fetchStats() {
+      const res = await fetch('/api/stats')
+      const data = await res.json()
+      setStats(data)
     }
 
-    fetchData()
+    fetchStats()
   }, [])
 
-  if (!stats) return <p>Loading Camino stats...</p>
+  // 🔥 fetch progress REAL
+  useEffect(() => {
+    async function fetchProgress() {
+      const res = await fetch('/api/progress')
+      const data = await res.json()
+      setProgress(data)
+    }
+
+    fetchProgress()
+  }, [])
+
+  // 🔥 evitar crash mientras carga
+  if (!stats || !progress) return <p>Loading...</p>
+
+  const currentStage = progress.stages.find(
+    (s: Stage) => !progress.completedStageIds.includes(s.id),
+  )
+
+  const progressData = {
+    completedStages: progress.completedStageIds.length,
+    totalStages: progress.stages.length,
+    currentStageNumber: currentStage?.number || 0,
+  }
+
+  const unlocked = useAchievements(progressData)
+
+  const handleStageClick = (stage: Stage) => {
+    mapRef.current?.flyTo(stage.lng, stage.lat)
+  }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold">Camino Progress</h1>
 
-      <p className="text-gray-500">
-        Track your journey to Santiago de Compostela
-      </p>
+      {/* 🎥 CINEMATIC */}
+      <button
+        onClick={() => playCinematic(progress.stages)}
+        className="bg-black text-white px-4 py-2 rounded-xl hover:opacity-80"
+      >
+        ▶️ Play My Camino
+      </button>
 
-      <div className="bg-gray-200 rounded-full h-6">
-        <div
-          className="bg-blue-600 h-6 rounded-full text-center text-white text-sm"
-          style={{ width: `${stats.progress}%` }}
-        >
-          {stats.progress.toFixed(1)}%
-        </div>
-      </div>
+      {/* 🗺️ MAPA REAL */}
+      <CaminoMap
+        ref={mapRef}
+        stages={progress.stages}
+        completedStageIds={progress.completedStageIds}
+      />
 
-      {/* STATS GRID */}
+      {/* 🎯 TIMELINE REAL */}
+      <Timeline
+        stages={progress.stages}
+        completedStageIds={progress.completedStageIds}
+        currentStageId={currentStage?.id}
+        onStageClick={(stage) => handleStageClick(stage)}
+      />
 
+      {/* 📊 STATS */}
       <div className="grid grid-cols-2 gap-4">
         <StatCard title="KM Walked" value={`${stats.totalKm} km`} />
-
         <StatCard
           title="Stages Completed"
           value={`${stats.completedStages} / ${stats.totalStages}`}
         />
-
         <StatCard title="Average Mood" value={`${stats.avgMood}/10`} />
-
         <StatCard title="Beers" value={`${stats.totalBeers}`} />
-
         <StatCard
           title="Beers per KM"
           value={(stats.beersPerKm ?? 0).toFixed(2)}
         />
-
         <StatCard title="Expenses" value={`€${stats.totalExpenses}`} />
       </div>
 
-      {/* CAMINO MAP */}
-
-      {progress && (
-        <CaminoMap
-          stages={progress.stages}
-          completedStageIds={progress.completedStageIds}
-        />
-      )}
+      {/* 🏆 ACHIEVEMENTS */}
+      <AchievementsPopup unlocked={unlocked} />
     </div>
   )
 }

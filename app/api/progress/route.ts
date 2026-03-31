@@ -1,97 +1,44 @@
-import { NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
-  try {
-    const entries = await prisma.journalEntry.findMany({
-      include: {
-        stage: true,
-      },
-    })
+  const { userId } = auth()
+  const effectiveUserId = userId || 'demo-user'
 
-    if (!entries.length) {
-      return NextResponse.json({
-        stages: [],
-        completedStageIds: [],
-      })
-    }
+  // 🔥 todas las etapas
+  const stages = await prisma.stage.findMany({
+    orderBy: { number: 'asc' },
+  })
 
-    const routeId = entries[0].stage.routeId
+  // 🔥 progreso del usuario
+  const progress = await prisma.userStageProgress.findMany({
+    where: { userId: effectiveUserId },
+  })
 
-    const stages = await prisma.stage.findMany({
-      where: {
-        routeId,
-      },
-      orderBy: {
-        number: 'asc',
-      },
-      select: {
-        id: true,
-        number: true,
-        from: true,
-        to: true,
-      },
-    })
+  const completedStageIds = progress.map((p) => p.stageId)
 
-    const completedStageIds = [...new Set(entries.map((e) => e.stageId))]
+  const completedStagesData = stages.filter((stage) =>
+    completedStageIds.includes(stage.id),
+  )
 
-    return NextResponse.json({
-      stages,
-      completedStageIds,
-    })
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to load route progress' },
-      { status: 500 },
-    )
-  }
+  const totalKm = completedStagesData.reduce(
+    (acc, stage) => acc + stage.distanceKm,
+    0,
+  )
+
+  const totalStages = stages.length
+  const completedStages = completedStagesData.length
+
+  const percent =
+    totalStages === 0 ? 0 : Math.round((completedStages / totalStages) * 100)
+
+  return NextResponse.json({
+    stages, // 🔥 NUEVO
+    completedStageIds, // 🔥 NUEVO
+    totalKm,
+    completedStages,
+    totalStages,
+    percent,
+  })
 }
-
-// import { NextResponse } from 'next/server'
-// import { prisma } from '@/lib/prisma'
-
-// export async function GET() {
-//   try {
-//     const entries = await prisma.journalEntry.findMany({
-//       include: {
-//         stage: true,
-//       },
-//     })
-
-//     if (!entries.length) {
-//       return NextResponse.json({
-//         stages: [],
-//         completedStageIds: [],
-//       })
-//     }
-
-//     const routeId = entries[0].stage.routeId
-
-//     const stages = await prisma.stage.findMany({
-//       where: {
-//         routeId,
-//       },
-//       orderBy: {
-//         number: 'asc',
-//       },
-//       select: {
-//         id: true,
-//         number: true,
-//         from: true,
-//         to: true,
-//       },
-//     })
-
-//     const completedStageIds = [...new Set(entries.map((e) => e.stageId))]
-
-//     return NextResponse.json({
-//       stages,
-//       completedStageIds,
-//     })
-//   } catch (error) {
-//     return NextResponse.json(
-//       { error: 'Failed to load route progress' },
-//       { status: 500 }
-//     )
-//   }
-// }

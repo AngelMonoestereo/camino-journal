@@ -35,8 +35,24 @@ model Stage {
   route       Route    @relation(fields: [routeId], references: [id])
 
   entries     JournalEntry[]
+  progress    UserStageProgress[] // 🔥 RELACIÓN AÑADIDA
 
   @@unique([routeId, number])
+}
+
+model UserStageProgress {
+  id          String   @id @default(cuid())
+
+  userId      String
+  stageId     String
+
+  completed   Boolean  @default(true)
+  completedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  stage Stage @relation(fields: [stageId], references: [id])
+
+  @@unique([userId, stageId])
 }
 
 model JournalEntry {
@@ -45,8 +61,8 @@ model JournalEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  mood      Int?
-  energy    Int?
+  mood         Int?
+  energy       Int?
   aiReflection String?
 
   beers      Int?
@@ -66,11 +82,12 @@ model JournalEntry {
   @@index([userId, createdAt])
 }
 
-
 model User {
   id        String         @id
   entries   JournalEntry[]
   routes    Route[]
+
+  progress  UserStageProgress[] // 🔥 RELACIÓN AÑADIDA
 
   preferences  UserPreferences?
   subscription Subscription?

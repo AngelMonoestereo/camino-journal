@@ -108,7 +108,7 @@ export default function DashboardPage() {
 
     const res = await fetch('/api/journal', {
       method: 'POST',
-      credentials: 'include', // 🔥 IMPORTANTE
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         content: entry,
@@ -118,9 +118,24 @@ export default function DashboardPage() {
 
     if (res.ok) {
       const savedEntry = await res.json()
+
+      // ✅ agrega entry al UI
       setEntries((prev) => [savedEntry, ...prev])
+
+      // limpiar form
       setEntry('')
       setSelectedStage('')
+
+      // 🔥 ACTUALIZA PROGRESS EN VIVO
+      const progressRes = await fetch('/api/progress', {
+        credentials: 'include',
+      })
+
+      const progressData = await progressRes.json()
+      setProgress(progressData)
+
+      // 🚀 OPCIONAL (flow brutal)
+      // router.push('/dashboard')
     }
 
     setLoading(false)
@@ -177,6 +192,7 @@ export default function DashboardPage() {
               <option value="">Selecciona etapa</option>
               {stages.map((stage) => (
                 <option key={stage.id} value={stage.id}>
+                  {stage.completed ? '✅ ' : ''}
                   Etapa {stage.number}: {stage.from} → {stage.to}
                 </option>
               ))}

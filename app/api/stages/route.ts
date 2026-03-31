@@ -10,6 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // 🔥 1. Buscar ruta del usuario o fallback a oficial
     const userRoute = await prisma.route.findFirst({
       where: { userId, isOfficial: false },
       include: {
@@ -19,20 +20,35 @@ export async function GET() {
       },
     })
 
-    if (!userRoute) {
-      const officialRoute = await prisma.route.findFirst({
+    const route =
+      userRoute ??
+      (await prisma.route.findFirst({
         where: { isOfficial: true },
         include: {
           stages: {
             orderBy: { number: 'asc' },
           },
         },
-      })
+      }))
 
-      return NextResponse.json(officialRoute?.stages ?? [])
+    if (!route) {
+      return NextResponse.json([])
     }
 
-    return NextResponse.json(userRoute.stages)
+    // 🔥 2. Buscar progreso del usuario
+    const progress = await prisma.userStageProgress.findMany({
+      where: { userId },
+    })
+
+    const completedSet = new Set(progress.map((p) => p.stageId))
+
+    // 🔥 3. Merge stages + progress
+    const stagesWithProgress = route.stages.map((stage) => ({
+      ...stage,
+      completed: completedSet.has(stage.id),
+    }))
+
+    return NextResponse.json(stagesWithProgress)
   } catch (error) {
     console.error('Error fetching stages:', error)
 
