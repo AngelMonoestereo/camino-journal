@@ -51,10 +51,25 @@ export default function PicosTripPage() {
               <p className="text-xs uppercase tracking-[0.25em] mb-2">
                 {day.number}
               </p>
+
               <h2 className="text-2xl font-serif mb-1">{day.title}</h2>
+
               <p className="text-sm text-[#6f6a61]">{day.description}</p>
             </a>
           ))}
+
+          <a
+            href="/trips/50-y-picos/people"
+            className="block border border-[#c9c0b3] rounded-2xl p-5 bg-[#fbf8f1] shadow-sm"
+          >
+            <p className="text-xs uppercase tracking-[0.25em] mb-2">👥 Crew</p>
+
+            <h2 className="text-2xl font-serif mb-1">Personas del viaje</h2>
+
+            <p className="text-sm text-[#6f6a61]">
+              Con quién compartiste esta aventura.
+            </p>
+          </a>
         </div>
       </section>
     </main>
