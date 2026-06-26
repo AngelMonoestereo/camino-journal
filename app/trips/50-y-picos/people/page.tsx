@@ -2,8 +2,28 @@
 
 import Link from 'next/link'
 
-const people = ['Ángel', 'Josie', 'Fran', 'Alejandro', 'Cristina']
-
+const people = [
+  {
+    name: 'Ángel',
+    slug: 'angel',
+  },
+  {
+    name: 'Josie',
+    slug: 'josie',
+  },
+  {
+    name: 'Fran',
+    slug: 'fran',
+  },
+  {
+    name: 'Alejandro',
+    slug: 'alejandro',
+  },
+  {
+    name: 'Cristina',
+    slug: 'cristina',
+  },
+]
 export default function PeoplePage() {
   return (
     <main className="min-h-screen bg-[#f6f1e8] text-[#2d2a26] px-6 py-10">
@@ -18,12 +38,13 @@ export default function PeoplePage() {
 
         <div className="space-y-4">
           {people.map((person) => (
-            <div
-              key={person}
-              className="border border-[#c9c0b3] rounded-2xl p-5 bg-[#fbf8f1]"
+            <Link
+              key={person.slug}
+              href={`/trips/50-y-picos/people/${person.slug}`}
+              className="block border border-[#c9c0b3] rounded-2xl p-5 bg-[#fbf8f1] hover:shadow-md transition"
             >
-              <h2 className="text-2xl font-serif">{person}</h2>
-            </div>
+              <h2 className="text-2xl font-serif">{person.name}</h2>
+            </Link>
           ))}
         </div>
       </section>

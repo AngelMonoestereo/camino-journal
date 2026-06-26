@@ -9,6 +9,7 @@ export default function Dia01Page() {
   const [mood, setMood] = useState('')
   const [statsCompleted, setStatsCompleted] = useState(false)
   const [closingLine, setClosingLine] = useState('')
+  const [dayPeople, setDayPeople] = useState<string[]>([])
 
   const [statsSummary, setStatsSummary] = useState({
     km: '',
@@ -25,7 +26,6 @@ export default function Dia01Page() {
     const savedRoute = localStorage.getItem('picos-dia-01-route')
     const savedNote = localStorage.getItem('picos-dia-01-note')
     const savedStats = localStorage.getItem('picos-dia-01-stats')
-    
 
     if (savedStats) {
       const stats = JSON.parse(savedStats)
@@ -49,6 +49,11 @@ export default function Dia01Page() {
         beers: stats.beers || '',
       })
     }
+    const savedDayPeople = localStorage.getItem('picos-dia-01-people')
+
+    if (savedDayPeople) {
+      setDayPeople(JSON.parse(savedDayPeople))
+    }
     const savedClosingLine = localStorage.getItem('picos-dia-01-closing-line')
     if (savedClosingLine) setClosingLine(savedClosingLine)
 
@@ -64,14 +69,21 @@ export default function Dia01Page() {
     localStorage.setItem('picos-dia-01-note', note)
     localStorage.setItem('picos-dia-01-mood', mood)
     localStorage.setItem('picos-dia-01-closing-line', closingLine)
+    localStorage.setItem('picos-dia-01-people', JSON.stringify(dayPeople))
     setSavedAt(
       new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
       }),
     )
-  }, [route, note, mood, closingLine])
-
+  }, [route, note, mood, closingLine, dayPeople])
+  function togglePerson(person: string) {
+    setDayPeople((currentPeople) =>
+      currentPeople.includes(person)
+        ? currentPeople.filter((item) => item !== person)
+        : [...currentPeople, person],
+    )
+  }
   function handleSaveLocation() {
     if (!navigator.geolocation) {
       alert('Geolocation is not supported on this device.')
@@ -211,7 +223,36 @@ export default function Dia01Page() {
               </p>
             )}
           </section>
-          
+          <section className="border border-[#c9c0b3] rounded-2xl p-5 bg-[#fbf8f1]">
+            <h2 className="text-2xl font-serif mb-3">
+              👥 ¿Con quién caminaste hoy?
+            </h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {['Ángel', 'Josie', 'Fran', 'Alejandro', 'Cristina'].map(
+                (person) => (
+                  <button
+                    key={person}
+                    onClick={() => togglePerson(person)}
+                    className={`border rounded-2xl p-4 ${
+                      dayPeople.includes(person)
+                        ? 'border-[#2d2a26] bg-[#2d2a26] text-white'
+                        : 'border-[#c9c0b3]'
+                    }`}
+                  >
+                    {person}
+                  </button>
+                ),
+              )}
+            </div>
+
+            {dayPeople.length > 0 && (
+              <p className="mt-3 text-xs text-[#6f6a61]">
+                Personas guardadas: {dayPeople.join(', ')}
+              </p>
+            )}
+          </section>
+
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={handleSaveLocation}
@@ -229,8 +270,8 @@ export default function Dia01Page() {
           </section>
           {location && (
             <p className="text-xs text-[#6f6a61]">
-              📍 Location saved at {location.savedAt}: {location.lat.toFixed(5)}
-              , {location.lng.toFixed(5)}
+              📍 Ubicación guardada a las {location.savedAt}:{' '}
+              {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
             </p>
           )}
         </div>
