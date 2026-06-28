@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import MoodSelector from '@/components/trips/MoodSelector'
+import QuoteCard from '@/components/trips/QuoteCard'
 
 export default function Dia01Page() {
   const [route, setRoute] = useState('Poncebos / Bulnes')
@@ -152,31 +154,7 @@ export default function Dia01Page() {
               ✓ Saved locally {savedAt && `at ${savedAt}`}
             </p>
           </section>
-          <section className="border border-[#c9c0b3] rounded-2xl p-5 bg-[#fbf8f1]">
-            <h2 className="text-2xl font-serif mb-3">¿Cómo te sentiste hoy?</h2>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {['Bien', 'Cansado', 'Encabronado', 'Agradecido'].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setMood(item)}
-                  className={`border rounded-2xl p-4 ${
-                    mood === item
-                      ? 'border-[#2d2a26] bg-[#2d2a26] text-white'
-                      : 'border-[#c9c0b3]'
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-
-            {mood && (
-              <p className="mt-3 text-xs text-[#6f6a61]">
-                Estado guardado: {mood}
-              </p>
-            )}
-          </section>
+          <MoodSelector mood={mood} onChange={setMood} />
           <a
             href="/trips/50-y-picos/dia-01/stats"
             className="block border border-[#c9c0b3] rounded-2xl p-6 bg-[#fbf8f1] mb-6 hover:shadow-md transition"
@@ -207,22 +185,7 @@ export default function Dia01Page() {
               <div className="text-2xl">→</div>
             </div>
           </a>
-          <section className="border border-[#c9c0b3] rounded-2xl p-5 bg-[#fbf8f1]">
-            <h2 className="text-2xl font-serif mb-3">🌅 Frase final del día</h2>
-
-            <input
-              className="w-full border border-[#c9c0b3] rounded-xl p-3 bg-transparent"
-              placeholder="Una frase para recordar este día..."
-              value={closingLine}
-              onChange={(e) => setClosingLine(e.target.value)}
-            />
-
-            {closingLine && (
-              <p className="mt-3 text-sm italic text-[#6f6a61]">
-                “{closingLine}”
-              </p>
-            )}
-          </section>
+          <QuoteCard value={closingLine} onChange={setClosingLine} />
           <section className="border border-[#c9c0b3] rounded-2xl p-5 bg-[#fbf8f1]">
             <h2 className="text-2xl font-serif mb-3">
               👥 ¿Con quién caminaste hoy?
