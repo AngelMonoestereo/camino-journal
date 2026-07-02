@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import MoodSelector from '@/components/trips/MoodSelector'
 import QuoteCard from '@/components/trips/QuoteCard'
+import PhotoGallery from '@/components/trips/PhotoGallery'
 
 type DayPageProps = {
   dayNumber: string
@@ -120,6 +121,7 @@ export default function DayPage({
 
           <QuoteCard value={closingLine} onChange={setClosingLine} />
 
+<PhotoGallery storageKey={`${storageKey}-photos`} />
           <section className="border border-[#c9c0b3] rounded-2xl p-5 bg-[#fbf8f1]">
             <h2 className="text-2xl font-serif mb-3">
               👥 ¿Con quién caminaste hoy?
@@ -128,6 +130,7 @@ export default function DayPage({
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {['Ángel', 'Josie', 'Fran', 'Alejandro', 'Cristina'].map(
                 (person) => (
+                  <PhotoGallery storageKey={`${storageKey}-photos`} />
                   <button
                     key={person}
                     onClick={() => togglePerson(person)}
